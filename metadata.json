@@ -1,0 +1,5 @@
+{
+  "name": "DuoMind: Consensus Protocol",
+  "description": "A dual-agent AI workflow where two distinct AI personas analyze a user's prompt, debate, visualize their internal thinking process, and iteratively work towards a consensus.",
+  "requestFramePermissions": []
+}
