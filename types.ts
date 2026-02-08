@@ -49,6 +49,10 @@ export interface Settings {
   openaiApiKey: string;
   currentWorkflowId: string;
   customAgents: AgentConfig[]; // Persona Workshop data
+
+  // Mouthpiece (Avatar/Proxy)
+  mouthpieceEnabled: boolean;
+  mouthpiecePrompt: string;
 }
 
 export enum ConversationStatus {
@@ -120,5 +124,8 @@ export const DEFAULT_SETTINGS: Settings = {
   openaiBaseURL: '',
   openaiApiKey: '',
   currentWorkflowId: 'hard_decision_v2',
-  customAgents: [...DEFAULT_AGENTS]
+  customAgents: [...DEFAULT_AGENTS],
+
+  mouthpieceEnabled: false,
+  mouthpiecePrompt: ''
 };

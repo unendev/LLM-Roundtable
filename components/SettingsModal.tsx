@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings as SettingsIcon, Database, Globe, UserPlus, Trash2, RotateCcw, Save, Users } from 'lucide-react';
+import { X, Settings as SettingsIcon, Database, Globe, UserPlus, Trash2, RotateCcw, Save, Users, Workflow, ToggleLeft, ToggleRight, Sparkles } from 'lucide-react';
 import { Settings, AIProvider, AgentConfig, DEFAULT_AGENTS } from '../types';
 
 interface SettingsModalProps {
   settings: Settings;
   onSave: (s: Settings) => void;
   onClose: () => void;
-  initialTab?: 'global' | 'workshop';
+  initialTab?: 'global' | 'workshop' | 'workflow';
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, onClose, initialTab = 'global' }) => {
   const [localSettings, setLocalSettings] = useState<Settings>({ ...settings });
-  const [activeTab, setActiveTab] = useState<'global' | 'workshop'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'global' | 'workshop' | 'workflow'>(initialTab);
 
   // Sync activeTab if initialTab changes while open
   useEffect(() => {
@@ -54,7 +54,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-white/10 w-full max-w-2xl h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/2">
+        <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02]">
           <div className="flex items-center gap-3 text-white">
             <div className="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center border border-indigo-500/30">
               <SettingsIcon size={20} className="text-indigo-400" />
@@ -70,12 +70,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
         </div>
 
         {/* Tabs */}
-        <div className="flex px-6 border-b border-white/5 bg-white/2">
+        <div className="flex px-6 border-b border-white/5 bg-white/[0.02]">
           <button 
             onClick={() => setActiveTab('global')}
             className={`px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'global' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
           >
             全局引擎设置
+          </button>
+          <button 
+            onClick={() => setActiveTab('workflow')}
+            className={`px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'workflow' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+          >
+            工作流
           </button>
           <button 
             onClick={() => setActiveTab('workshop')}
@@ -163,6 +169,61 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
                 </div>
               </div>
             </div>
+          ) : activeTab === 'workflow' ? (
+            <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600/10 flex items-center justify-center border border-emerald-500/20">
+                  <Workflow size={18} className="text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">工作流</h3>
+                  <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">Roundtable & Mouthpiece</p>
+                </div>
+              </div>
+
+              {/* Mouthpiece Toggle */}
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-xs font-bold text-slate-200">嘴替（Mouthpiece）</div>
+                    <div className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">读完回复后，生成追问建议</div>
+                  </div>
+                  <button
+                    onClick={() => setLocalSettings(s => ({ ...s, mouthpieceEnabled: !s.mouthpieceEnabled }))}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                      localSettings.mouthpieceEnabled
+                        ? 'bg-emerald-600/20 border-emerald-500/30 text-emerald-300'
+                        : 'bg-slate-950/70 border-white/5 text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                    }`}
+                    title="启用/停用嘴替"
+                  >
+                    {localSettings.mouthpieceEnabled ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
+                    {localSettings.mouthpieceEnabled ? '已开启' : '已关闭'}
+                  </button>
+                </div>
+
+                <div className="text-[10px] text-slate-500 leading-relaxed">
+                  <span className="text-slate-400 font-bold">触发规则：</span>
+                  圆桌模式：每轮发言结束后自动运行；也可在顶栏手动触发「追问」。单对单模式：在回复后生成追问建议。
+                </div>
+              </div>
+
+              {/* Mouthpiece Prompt */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-xs text-slate-400 uppercase font-mono">
+                  <Sparkles size={12} /> 嘴替提示词 (Mouthpiece Prompt)
+                </label>
+                <textarea
+                  value={localSettings.mouthpiecePrompt}
+                  onChange={(e) => setLocalSettings({ ...localSettings, mouthpiecePrompt: e.target.value })}
+                  placeholder="可选：例如『优先追问预算/时间/风险偏好；不要问泛问题；问题必须可直接回答』"
+                  className="w-full bg-slate-950/50 border border-white/5 rounded-2xl p-4 text-xs text-slate-200 min-h-[160px] focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/10 outline-none resize-none font-mono"
+                />
+                <div className="text-[10px] text-slate-500 leading-relaxed">
+                  该提示词会追加到嘴替系统指令中，用于定制追问风格、约束与侧重点。
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4 animate-in slide-in-from-right-4 duration-300 pb-20">
               <div className="flex items-center justify-between mb-2">
@@ -173,7 +234,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onSave, 
               </div>
 
               {localSettings.customAgents.map((agent, index) => (
-                <div key={agent.id} className="p-4 rounded-2xl bg-white/2 border border-white/5 space-y-4 relative group">
+                <div key={agent.id} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4 relative group">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 flex-grow">
                       <div className="text-[10px] font-mono text-slate-600 w-4">{index + 1}</div>

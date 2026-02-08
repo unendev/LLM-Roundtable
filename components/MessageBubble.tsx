@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Message, AgentConfig } from '../types';
 import { BrainCircuit, User, ChevronRight, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+
+const MarkdownRenderer = React.lazy(() => import('./MarkdownRenderer'));
 
 interface MessageBubbleProps {
   message: Message;
@@ -12,8 +12,13 @@ interface MessageBubbleProps {
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentAgents }) => {
   const [userToggled, setUserToggled] = useState<boolean | null>(null);
   const isUser = message.sender === 'USER';
-  
-  const agentConfig = currentAgents.find(a => a.id === message.sender);
+
+  const agentConfig =
+    message.sender === '__mouthpiece__'
+      ? ({ id: '__mouthpiece__', name: '嘴替情报官', role: '', color: 'purple', avatar: '嘴', description: '读后追问' } as AgentConfig)
+      : message.sender === '__single__'
+        ? ({ id: '__single__', name: '助手', role: '', color: 'blue', avatar: 'AI', description: '单对单' } as AgentConfig)
+        : currentAgents.find(a => a.id === message.sender);
 
   const hasThought = (message.thought || '').length > 0;
   const hasContent = (message.content || '').length > 0;
@@ -86,7 +91,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentAg
         )}
 
         <div className={`prose max-w-none ${isUser ? 'text-lg font-medium text-white text-center' : 'text-slate-200'}`}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+          <Suspense fallback={<div className="text-slate-400 text-sm whitespace-pre-wrap">{message.content}</div>}>
+            <MarkdownRenderer>{message.content}</MarkdownRenderer>
+          </Suspense>
         </div>
 
         {message.isConsensusTrigger && (

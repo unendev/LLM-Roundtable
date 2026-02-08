@@ -10,6 +10,8 @@ interface ControlPanelProps {
   onStop: () => void;
   onReset: () => void;
   hasMessages: boolean;
+  isInputActive?: boolean;
+  onInputActiveChange?: (active: boolean) => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({ 
@@ -19,11 +21,15 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onStart, 
   onStop, 
   onReset,
-  hasMessages
+  hasMessages,
+  isInputActive = false,
+  onInputActiveChange
 }) => {
   const isRunning = status === ConversationStatus.ACTIVE;
   const isError = status === ConversationStatus.ERROR;
   const canInput = status !== ConversationStatus.ACTIVE;
+
+  const shouldAutoHide = !isRunning && !isError && !isInputActive && !topic.trim();
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
@@ -34,7 +40,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 w-full bg-slate-900/90 backdrop-blur-xl border-t border-white/5 p-4 md:p-6 z-50 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+    <div className={`fixed bottom-0 left-0 w-full bg-slate-900/90 backdrop-blur-xl border-t border-white/5 p-4 md:p-6 z-50 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 ${
+      shouldAutoHide ? 'md:translate-y-10 md:opacity-40 hover:md:translate-y-0 hover:md:opacity-100 focus-within:md:translate-y-0 focus-within:md:opacity-100' : 'opacity-100'
+    }`}
+      onMouseEnter={() => onInputActiveChange?.(true)}
+      onMouseLeave={() => { if (!topic.trim()) onInputActiveChange?.(false); }}
+    >
       <div className="max-w-3xl mx-auto flex flex-col gap-3">
         
         {status !== ConversationStatus.IDLE && (
@@ -59,6 +70,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => onInputActiveChange?.(true)}
+              onBlur={() => { if (!topic.trim()) onInputActiveChange?.(false); }}
               placeholder={hasMessages ? "追问或引导圆桌方向..." : "在此投下你的灵感种子（例如：该不该回老家？/ 牙疼去哪看？）"}
               disabled={!canInput}
               className="w-full bg-slate-950/80 text-slate-200 border border-white/5 rounded-2xl p-4 pr-12 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/50 outline-none resize-none h-16 md:h-20 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-inner placeholder:text-slate-600"
